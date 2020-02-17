@@ -16,7 +16,7 @@ var ChordChart = {
             var zoneFilterNameCol;
             var width = 600,
                 height = 600;
-            var chartData;
+
             var outerRadius = width / 2,
                 innerRadius = outerRadius - 130;
             var json = null;
@@ -126,7 +126,11 @@ var ChordChart = {
                             if (data["scenarios"][scenario]["ScenarioFocus"] != undefined) {
                                 SCENARIO_FOCUS = true;
                                 scenarioPolyFile = data["scenarios"][scenario]["ScenarioFocus"];
-                                $('#' + id + '-by-district-map').before(" Focus Color: <input type='text' id='" + id + "-focus-color' style='display: none;' >  ");
+                                $('#' + id + '-by-district-map').before(
+                                  " <span class=\"control-label\">Focus Color</span> <input type='text' id='" + 
+                                  id + 
+                                  "-focus-color' style='display: none;' >  "
+                                );
                             }
                         }
                         var configSettings = data["Chord"][configName];
@@ -179,6 +183,8 @@ var ChordChart = {
                     });
 
 
+                } else {
+                    return;
                 }
             }
 
@@ -198,7 +204,8 @@ var ChordChart = {
             }
 
             function goThroughChordData() {
-                $('#' + id + '-chart-container').html('');
+                $('#' + id + '-chart-container svg').remove();
+                $('#' + id + '-chart-container div').remove();
                 chartData = [];
                 datamatrix = [];
                 //read in data and create chord when finished
@@ -302,9 +309,9 @@ var ChordChart = {
                             chartDataObject = {};
                             matrixmap = undefined;
                             matrixmap = chordMpr(data);
-                            matrixmap.addValuesToMap("FROM")
+                            matrixmap.addValuesToMap(mainGroupColumnName)
                                 .setFilter(function (row, a, b) {
-                                    return (row.FROM === a.name && row.TO === b.name)
+                                    return (row[mainGroupColumnName] === a.name && row[subGroupColumnName] === b.name)
                                 }).setAccessor(function (recs, a, b) {
                                 if (!recs[0]) return 0;
                                 return recs[0][header];
@@ -469,6 +476,12 @@ var ChordChart = {
                 if(sidebyside){
                     svgWidth = Math.min(svgWidth,40);
                 }
+                if($('#'+chart.chartId + "_svg").length>0){
+                    $('#'+chart.chartId + "_svg").remove();
+                }
+                if($('#'+chart.chartId + "-tooltip").length>0){
+                    $('#'+chart.chartId + "-tooltip").remove();
+                }
                 d3.select("#" + id + "-chart-container").append("div").attr("id", chart.chartId + "-tooltip").attr("class", "chord-tooltip").attr("chartidx", chartData.indexOf(chart));
                 var svg = d3.select("#" + id + "-chart-container").append("svg:svg")
                     .attr("width",svgWidth+"%") //($('#' + id + '-chart-container').width()) / numberChordPerRow)
@@ -611,7 +624,7 @@ var ChordChart = {
                     })
                     .attr("d", d3.svg.chord().radius(innerRadius)).on("mouseover", function (d) {
 
-                        d3.selectAll(".chord-tooltip")
+                        d3.selectAll('#' + id + '-chart-container .chord-tooltip')
                             .style("visibility", function(){
                                 var chartIdx = $(this).attr('chartIdx');
                                 var eventTarget = d3.event.currentTarget.ownerSVGElement.getAttribute("chartIdx")
@@ -727,22 +740,24 @@ var ChordChart = {
                 }
 
                 function createToolTipTable(chart, chartIdx) {
+                    if($('#'+id+'-tooltiptablediv').length ==0){
+                        $('#' + id + '-div').append("<div id='" + id+"-tooltiptablediv'   ></div>");
+                    }
+
+
                     if($('#'+chart.chartId+"_tooltiptable").length ==0) {
-                        $('#' + id + '-div').append("<div id='" + chart.chartId + "_tooltiptable' class='chord-tooltiptablediv' ></div>");
+                        $('#' + id+'-tooltiptablediv').append("<div id='" + chart.chartId + "_tooltiptable' class='chord-tooltiptablediv' ></div>");
                         var mydiv = $('#' + chart.chartId + "_tooltiptable");
-                        mydiv.css("width", 100 / numberChordPerRow + "%");
+                        mydiv.css("width", 98 / numberChordPerRow + "%");
                         mydiv.css("visibility","hidden");
-                        $('#' + chart.chartId + "_tooltiptable").append("<table class='table-condensed table-bordered chord-tooltiptable'><thead><tr><th>ORIGIN</th><th>DESTINATION</th><th>DATA</th></tr></thead>" +
+                        mydiv.css("max-width","44%");
+                        $('#' + chart.chartId + "_tooltiptable").append("<table class='table-condensed table-bordered chord-tooltiptable'><thead><tr><th style='width:30%'>ORIGIN</th><th style='width:30%'>DESTINATION</th><th style='width:30%'>DATA</th></tr></thead>" +
                             "<tbody></tbody>" +
                             "</table>");
                         //.attr("transform", "translate(" + ($('#' + id + '-chart-container').width() / (numberChordPerRow * 2) - 25) + ",14)");
-                        if (chartIdx == 0) {
-                            mydiv.css("float", "left");
-                        } else if (chartIdx == 1) {
+
                             mydiv.css("display", "inline-block");
-                        } else if (chartIdx == 2) {
-                            mydiv.css("float", "right");
-                        }
+
                         if(chartData.length ==2 && chartIdx==1){
                             $('#' + chart.chartId + "_tooltiptable table").css('margin-left','12%');
                         }
@@ -972,8 +987,10 @@ var ChordChart = {
                     $('#'+id+'-datatable-div').css("margin-top","-1%");
 
                 }
-                if (map != undefined) {
-                    return;
+                if ($('#'+id + "-by-district-map").children().length >0) {
+                    $('#'+id + "-by-district-map").html('');
+                    $('#'+id + "-by-district-map").removeClass();
+                    $('#'+id + "-by-district-map").addClass("col-xs-12");
                 }
                 var tonerLayer = L.tileLayer('//stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png', {
                     id: id + "-by-district-map.toner",
@@ -987,8 +1004,8 @@ var ChordChart = {
                     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                 });
 
-
-                map = L.map(id + "-by-district-map", {
+                var container = L.DomUtil.get(id + "-by-district-map"); if(container != null){ container._leaflet_id = null; }
+                map = new L.map(id + "-by-district-map", {
                     minZoom: 6,
                     layers: [tonerLayer]
                 }).setView(CENTER_LOC, 9);
@@ -1011,6 +1028,8 @@ var ChordChart = {
                     for (var i = 0; i < zoneTiles.features.length; i++) {
                         var feature = zoneTiles.features[i];
 
+                      if (!feature.geometry.coordinates) continue;
+                      
                         var centroid = L.latLngBounds(feature.geometry.coordinates[0]).getCenter();
 
 
@@ -1143,6 +1162,10 @@ var ChordChart = {
                 "use strict";
                 if(sidebyside){
                     return;
+                }
+                if(map == undefined){
+                    createMap();
+
                 }
                 if (map.hasLayer(zoneDataLayer)) {
                     console.log("zone layer on");

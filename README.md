@@ -26,7 +26,7 @@ ActivityViz supports configuration for multiple regions.  To setup ActivityViz i
 3. Data locations can be stored local to the repository or online
     - Examples for a region named "rsginc":
         - Local: `"datalocation": "/data/rsginc/"`
-        - Via GitHub: `"datalocation": "https://raw.githubusercontent.com/RSGINC/ActivityViz/master/data/rsginc/"`
+        - Via GitHub: `"datalocation": "https://raw.githubusercontent.com/RSGInc/ActivityViz_data/master/data/rsginc/"`
 4. The first region will determine which graphics are shown on the main page.
 5. Copy an existing region.json file into the region folder.
 
@@ -45,19 +45,21 @@ Each region supports data for multiple scenarios.  Do the following to add scena
   - PointofInterest.csv: POINTS OF INTEREST, FILTER, LAT, LNG, GROUPING, <QUANTY_1_LABEL>, <QUANTY_2_LABEL>, ...
   - TimeUseData.csv: GROUP, TIME PERIOD, PURPOSE, QUANTITY
 
-Notes: 
+Notes:   
   - All data tables are not required and each data table is used to populate a specific visual.  Take 
 a look at the example data tables to see how each visual is constructed based on the data.  Most of the 
 visuals are populated based by what is in the data tables, thereby making the visuals highly customizable.  
-  - The PERIOD entries for TimeUse and 3DAnimatedMap are 1 to 48 and represent 30 minute periods from 3am to 3am the next day.  
-  - The TimeUse purposes must be ALLCAPS and must include at least HOME, WORK, SCHOOL.  TimeUse must also include an ALL person types.
+  - Avoid special characters such as space, slash, etc. in table data (column names and data entries).
+  - TimeUse: The PERIOD entries for TimeUse and 3DAnimatedMap are 1 to 48 and represent 30 minute periods 
+from 3am to 3am the next day.  The TimeUse purposes must be ALLCAPS and must include at least HOME, WORK, 
+SCHOOL.  TimeUse must also include an ALL person types.
   
 ## Data/Region Folder
 Each Data/Region folder needs the following:
 1. region.json - Region specific config file:
     - Title: Title that shows up in tab of web page
     - CountyFile: Name of the geojson file with region counties
-    - ZoneFile: Name of the geojson file with zones
+    - ZoneFile: Name of the geojson file with zones and property id for zone ids
     - Icon: ico format agency logo image file stored in the img folder (use an online converter from png if needed)
     - Logo: png format agency logo image file stored in the img folder (use an online converter from png if needed)
     - NavbarTitle: Name to appear in the navbar
@@ -99,25 +101,29 @@ Each Data/Region folder needs the following:
         - StackAllChartsByDefault: (true/false or "N/A" to hide) flag that shows all data as stacked rather than grouped by default for all charts
         - ChartWidthOverride: array of values to allow you to individually set each chart's width
     - 3DMap: 3D Map specific properties
+        - ZoneFile: Geojson zone polygons with property id set to zone id
         - ShowPeriodsAsDropdown: true/false flag that shows a dropdown to select different periods
         - DataHasPeriods: true/false flag to show or hide the time related features of the slider (true shows them, false hides)
         - ZoneFilterFile: takes a csv file with the first column named ID for zone ID that contains show/hide filters for each zone to be displayed
         - ZoneFilters: a list of zones and the display name for them that will be used, zone ids must match zone filter file columns
         - ZoneFilterLabel: a label to be shown above the list of zone filters
         - CentroidsOff: sets the default value for the centroids checkbox
+        - NoValueColor: Name, hex, or RGB value of color to use when a data cell does not have a value.
     - BarMap: Barchart that also displays with a map with zones or bubbles 
         - BarSpacing: The space between the bars on the chart, default is 0.2, range is between 0.1 and 1.0.
         - RotateLabels: Number of degrees to rotate the labels on the Y-Axis.  Default is 0 can go from -90 to 90.
         - ZoneFilterFile: takes a csv file with the first column named ID for zone ID that contains show/hide filters for each zone to be displayed
         - ZoneFilters: a list of zones and the display name for them that will be used, zone ids must match zone filter file columns
         - ZoneFilterLabel: a label to be shown above the list of zone filters
+          - Note: to apply a specific color to these zones, see DefaultHighlightColor under region.json
         - CycleMapTools: true/false flag to hide or show the cycle map tools
         - ZoneFile: Name of the GeoJSON file with the zone data to display on map requires each feature to have a "NAME" property to link to data set
+        - NoValueColor: Name, hex, or RGB value of color to use when a cell does not have a value.
     - Chord: Chord chart that also displays with a map
         - DesireLinesOn: Flag that will turn the desire lines layer on the map by default, this will turn off the zone layer as well
         - ExcludeSameOD: Flag to exclude data points that have the same origin and destination
         - SideBySide: Flag to transform the chord tab into one that has multiple chord charts side by side, this will also remove the map from the page
-        - ChartPerRow: Number of side by side chord charts to show on page.  Setup cannot handle more than 1 row of 2 or 3 charts
+        - ChartPerRow: Number of side by side chord charts to show on page.  Setup cannot handle more than 1 row of 4 or 5 charts
         - ZoneFilterFile: takes a csv file with the first column named ID for zone ID and that contains show/hide filters for each zone to be displayed, the labels of the zones MUST match the data FROM/TO labels
         - ZoneFile: Name of the GeoJSON file with the zone data to display on map requires each feature to have a "NAME" to link to data set, these zones will appear on the map color coded to the chord chart data points
         - LabelSize: the font size in pixels "10" is the default if not specified. 
@@ -129,7 +135,12 @@ Each Data/Region folder needs the following:
         - RotateLabels: Number of degrees to rotate the labels on the Y-Axis.  Default is 0 can go from -90 to 90.
         - LegendTitle: Title shown above the legend of the bar chart
         - CenterMap: chart specific center lat/lng override, this will take precedence over the region and scenario level points
-        - ZoneFile: Name of the GeoJSON file with the zone data to display on map requires each feature to have a "NAME" to link to data set         
+        - ZoneFile: Name of the GeoJSON file with the zone data to display on map requires each feature to have a "NAME" to link to data set
+    - Sunburst: Sunburst tab specific configuration
+        - ChartType: Determines which chart is shown on page, 1 for Sunburst, 2 for Pie Chart and 3 for Waffle Pie Chart
+        - WaffleRow: Number of rows the waffle chart should have (default is 10)
+        - WaffleColumn: Number of columns the waffle chart should have (default is 10 for 10x10 block)
+        - BlockSize: Number of pixels each block in the waffle chart should have (default is 30)         
 3. Data Folder - Scenario data folder with its name equal to its scenario entry, can either be local or in the cloud. Location of the region's scenario data folder is specified in the main config.json file 
 4. Zones.geojson - Zone polygons with the *id* property equal to the zone number. Polygons also require the *NAME* property to display desire lines and link up with data sets.  The open source [mapshaper](http://www.mapshaper.org) will convert and simplify a shapefile to geojson.
 5. Counties.geojson - County polygons with the *Name* property equal to the county name.
